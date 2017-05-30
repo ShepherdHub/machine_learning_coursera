@@ -21,6 +21,7 @@ Theta1 = reshape(nn_params(1:hidden_layer_size * (input_layer_size + 1)), ...
 
 Theta2 = reshape(nn_params((1 + (hidden_layer_size * (input_layer_size + 1))):end), ...
                  num_labels, (hidden_layer_size + 1));
+theta2_size = size(Theta2)
 
 % Setup some useful variables
 m = size(X, 1);
@@ -49,11 +50,11 @@ a2 = [ones(rows(a2),1) a2]; %5000x26
 z3 = a2 * Theta2';
 hypothesis = sigmoid(z3); %5000x10
 
-for i = 1:m
-  yi = Y(i,:);
-  hi = hypothesis(i,:);
-  J += (1/m) * (-yi * log(hi)' - (1-yi) * log(1-hi)'); 
-endfor
+%for i = 1:m
+%  yi = Y(i,:);
+%  hi = hypothesis(i,:);
+%  J += (1/m) * (-yi * log(hi)' - (1-yi) * log(1-hi)'); 
+%endfor
 
 %
 % Part 2: Implement the backpropagation algorithm to compute the gradients
@@ -70,6 +71,13 @@ endfor
 %         Hint: We recommend implementing backpropagation using a for-loop
 %               over the training examples if you are implementing it for the 
 %               first time.
+
+for t = 1:1
+  delta3 = (hypothesis(t,:) - Y(t,:))'; %10x1
+  del_theta3 = Theta2'*delta3
+  %delta2 = del_theta3(2:size(del_theta3)).*sigmoidGradient(z2(t,:))'
+endfor
+
 %
 % Part 3: Implement regularization with the cost function and gradients.
 %
@@ -80,11 +88,12 @@ endfor
 %
 
 
+%theta_reg1 = [zeros(rows(Theta1),1) Theta1(:,2:columns(Theta1))];
+%theta_reg2 = [zeros(rows(Theta2),1) Theta2(:,2:columns(Theta2))];
+%reg = (lambda / (2 * m)) * (sum(sum(theta_reg1.^2)) ...
+%        + sum(sum(theta_reg2.^2)));
 
-
-
-
-
+%J += reg;
 
 
 
