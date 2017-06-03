@@ -21,7 +21,6 @@ Theta1 = reshape(nn_params(1:hidden_layer_size * (input_layer_size + 1)), ...
 
 Theta2 = reshape(nn_params((1 + (hidden_layer_size * (input_layer_size + 1))):end), ...
                  num_labels, (hidden_layer_size + 1));
-theta2_size = size(Theta2)
 
 % Setup some useful variables
 m = size(X, 1);
@@ -40,21 +39,17 @@ Theta2_grad = zeros(size(Theta2));
 %         cost function computation is correct by verifying the cost
 %         computed in ex4.m
 
-Y = eye(num_labels)(y,:);
+Y = eye(num_labels)(y,:); %5000x10
 
-X = [ones(rows(X),1) X];
-z2 = X * Theta1';
+X = [ones(rows(X),1) X]; %5000x401
+z2 = X * Theta1'; %5000x25
 a2 = sigmoid(z2); % 5000x25
 
 a2 = [ones(rows(a2),1) a2]; %5000x26
-z3 = a2 * Theta2';
+z3 = a2 * Theta2'; %5000x10
 hypothesis = sigmoid(z3); %5000x10
 
-%for i = 1:m
-%  yi = Y(i,:);
-%  hi = hypothesis(i,:);
-%  J += (1/m) * (-yi * log(hi)' - (1-yi) * log(1-hi)'); 
-%endfor
+J = (1/m) * sum(sum(-Y .* log(hypothesis) - (1 - Y) .* log(1-hypothesis)));
 
 %
 % Part 2: Implement the backpropagation algorithm to compute the gradients
@@ -72,11 +67,18 @@ hypothesis = sigmoid(z3); %5000x10
 %               over the training examples if you are implementing it for the 
 %               first time.
 
-for t = 1:1
-  delta3 = (hypothesis(t,:) - Y(t,:))'; %10x1
-  del_theta3 = Theta2'*delta3
-  %delta2 = del_theta3(2:size(del_theta3)).*sigmoidGradient(z2(t,:))'
-endfor
+% Theta1 => 25 x 401
+% Theta2 => 10 x 26
+
+%Vectorized implementation
+d3 = hypothesis - Y; %5000x10
+d2 = d3 * Theta2(:,2:end) .* sigmoidGradient(z2); %5000x10 * 10x25 .* 5000x25
+
+Delta1 = d2' * X; %25x401
+Delta2 = d3' * a2; %10x26
+
+Theta1_grad = (1/m) * Delta1;
+Theta2_grad = (1/m) * Delta2;
 
 %
 % Part 3: Implement regularization with the cost function and gradients.
@@ -88,22 +90,18 @@ endfor
 %
 
 
-%theta_reg1 = [zeros(rows(Theta1),1) Theta1(:,2:columns(Theta1))];
-%theta_reg2 = [zeros(rows(Theta2),1) Theta2(:,2:columns(Theta2))];
-%reg = (lambda / (2 * m)) * (sum(sum(theta_reg1.^2)) ...
-%        + sum(sum(theta_reg2.^2)));
+theta_reg1 = [zeros(rows(Theta1),1) Theta1(:,2:columns(Theta1))];
+theta_reg2 = [zeros(rows(Theta2),1) Theta2(:,2:columns(Theta2))];
+reg = (lambda / (2 * m)) * (sum(sum(theta_reg1.^2)) ...
+        + sum(sum(theta_reg2.^2)));
 
-%J += reg;
+J += reg;
 
+back_reg1 = (lambda/m) * theta_reg1;
+back_reg2 = (lambda/m) * theta_reg2;
 
-
-
-
-
-
-
-
-
+Theta1_grad += back_reg1;
+Theta2_grad += back_reg2;
 
 
 % -------------------------------------------------------------
